@@ -130,13 +130,12 @@ func (response *DescribePartitionsResponse) bytes(buffer *bytes.Buffer) {
 	for _, topic := range response.topics {
 		binary.Write(buffer, binary.BigEndian, topic.errorCode)
 		writeCompactString(buffer, topic.name)
-		// buffer.WriteString(topic.topicId)
-		binary.Write(buffer, binary.BigEndian, topic.topicId[:])
+		binary.Write(buffer, binary.BigEndian, topic.topicId)
 		binary.Write(buffer, binary.BigEndian, topic.isInternal)
 
 		// partitions
 		if topic.partitions == nil {
-			binary.Write(buffer, binary.BigEndian, int8(1))
+			binary.Write(buffer, binary.BigEndian, int8(0))
 		} else {
 			binary.Write(buffer, binary.BigEndian, int8(len(topic.partitions)+1))
 			for _, partition := range topic.partitions {
@@ -151,10 +150,8 @@ func (response *DescribePartitionsResponse) bytes(buffer *bytes.Buffer) {
 	}
 
 	// next cursor
-	// binary.Write(buffer, binary.BigEndian, int8(1))
-	// writeCompactString(buffer, response.nextCursor.topicName)
-	// binary.Write(buffer, binary.BigEndian, response.nextCursor.partitionIndex)
-	binary.Write(buffer, binary.BigEndian, int8(-1))
+	writeCompactString(buffer, response.nextCursor.topicName)
+	binary.Write(buffer, binary.BigEndian, response.nextCursor.partitionIndex)
 
 	addTagField(buffer)
 }
