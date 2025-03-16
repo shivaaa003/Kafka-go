@@ -10,6 +10,39 @@ import (
 
 // DescribePartitions
 
+type DescribePartitionsRequest struct {
+	RequestHeader
+	names                  []string
+	responsePartitionLimit int32
+	topicName              string
+	partitionIndex         int32
+}
+
+type Partition struct {
+	errorCode      int16
+	partitionIndex int32
+}
+
+type Topic struct {
+	errorCode                 int16
+	name                      string
+	topicId                   uuid.UUID
+	isInternal                bool
+	partitions                []Partition
+	topicAuthorizedOperations int32
+}
+
+type NextCursor struct {
+	topicName      string
+	partitionIndex int32
+}
+
+type DescribePartitionsResponse struct {
+	throttleTime int32
+	topics       []Topic
+	nextCursor   NextCursor
+}
+
 func (request *DescribePartitionsRequest) parse(buffer *bytes.Buffer) {
 	request.names = getStringArray(buffer)
 	binary.Read(buffer, binary.BigEndian, &request.responsePartitionLimit)
@@ -18,6 +51,7 @@ func (request *DescribePartitionsRequest) parse(buffer *bytes.Buffer) {
 }
 
 func (response *DescribePartitionsResponse) bytes(buffer *bytes.Buffer) {
+
 	binary.Write(buffer, binary.BigEndian, response.throttleTime)
 
 	// topics
@@ -61,6 +95,6 @@ func (request *DescribePartitionsRequest) generateResponse(commonResponse *Respo
 
 	dTVResponse := DescribePartitionsResponse{}
 	dTVResponse.throttleTime = 0
-	dTVResponse.topics = append(dTVResponse.topics, Topic{errorCode: 3, name: request.names[0], topicId: uuid.UUID{0}, partitions: nil})
+	dTVResponse.topics = append(dTVResponse.topics, Topic{errorCode: 0, name: request.names[0], topicId: uuid.UUID{0}, partitions: nil})
 	dTVResponse.bytes(&commonResponse.BytesData)
 }
