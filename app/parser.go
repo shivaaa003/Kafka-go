@@ -124,11 +124,21 @@ func (request *DescribePartitionsRequest) parse(buffer *bytes.Buffer) {
 
 func (response *DescribePartitionsResponse) bytes(buffer *bytes.Buffer) {
 	binary.Write(buffer, binary.BigEndian, response.throttleTime)
-	binary.Write(buffer, binary.BigEndian, binary.AppendVarint([]byte{}, int64(len(response.topics)+1)))
+	binary.Write(buffer, binary.BigEndian, int8(len(response.topics)+1))
 	for _, topic := range response.topics {
 		binary.Write(buffer, binary.BigEndian, topic.errorCode)
 		writeCompactString(buffer, topic.name)
 		binary.Write(buffer, binary.BigEndian, topic.topicId)
+		binary.Write(buffer, binary.BigEndian, topic.isInternal)
+
+		// partitions
+		binary.Write(buffer, binary.BigEndian, int8(len(topic.partitions)+1))
+		for _, partition := range topic.partitions {
+			binary.Write(buffer, binary.BigEndian, partition.errorCode)
+			binary.Write(buffer, binary.BigEndian, partition.partitionIndex)
+			addTagField(buffer)
+		}
+
 		addTagField(buffer)
 	}
 	addTagField(buffer)
@@ -146,6 +156,7 @@ func (request *DescribePartitionsRequest) generateResponse(commonResponse *Respo
 func (response *Response) bytes(buffer *bytes.Buffer) {
 	message := &bytes.Buffer{}
 	binary.Write(message, binary.BigEndian, response.correlationId)
+	addTagField(message)
 	binary.Write(message, binary.BigEndian, response.BytesData.Bytes())
 	response.messageSize = int32(message.Len())
 
