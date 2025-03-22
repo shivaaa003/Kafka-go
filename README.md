@@ -1,5 +1,5 @@
 KAFKA-GO
-1. Ensure you have `go (1.19)` installed locally
+1. Ensure you have `go` installed locally
 2. Run `./your_program.sh` to run your Kafka broker, which is implemented in
    `app/server.go`.
 3. Commit your changes and run `git push origin master` to submit your solution
